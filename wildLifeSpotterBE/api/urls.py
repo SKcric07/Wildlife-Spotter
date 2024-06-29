@@ -10,6 +10,7 @@ urlpatterns = [
     path('refreshaccesstoken',views.refresh_access_token, name='refreshAccessToken'),
     path('updateuserdata',views.update_user_data, name='updateuserdata'),
     path('partialupdateuser',views.partial_update_user_data,name='partialupdateuser'),
-    path('delete-user',views.delete_user,name="deleteUser")
+    path('delete-user',views.delete_user,name="deleteUser"),
+    path('predict',views.predict_image_view,name='predictImage')
 
 ]

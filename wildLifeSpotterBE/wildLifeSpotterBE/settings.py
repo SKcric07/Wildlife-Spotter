@@ -33,7 +33,8 @@ INSTALLED_APPS = [
     "api",
     "database",
     "rest_framework",
-    "corsheaders"
+    "corsheaders",
+    "djongo"
 
 ]
 
@@ -82,12 +83,22 @@ WSGI_APPLICATION = "wildLifeSpotterBE.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": os.getenv("WLS_DATABASE_ENGINE"),
-        "NAME" : os.getenv("WLS_DATABASE_NAME"),
-        "USER" : os.getenv("WLS_DATABASE_USER"),
-        "PASSWORD" : os.getenv("WLS_DATABASE_PASSWORD"),
-        "HOST" : os.getenv("WLS_DATABASE_HOST")
-    }
+        "NAME": os.getenv("WLS_DATABASE_NAME"),
+        "USER": os.getenv("WLS_DATABASE_USER"),
+        "PASSWORD": os.getenv("WLS_DATABASE_PASSWORD"),
+        "HOST": os.getenv("WLS_DATABASE_HOST"),
+    },
+    
+    "mongodb": {
+        "ENGINE": "djongo",
+        "NAME": os.getenv("WLS_MONGO_DB_NAME"),
+        "CLIENT": {
+            "host": os.getenv("WLS_MONGO_DB_CONNECTION_STRING"),
+        }
+    },
 }
+
+DATABASE_ROUTERS = ['wildLifeSpotterBE.dbrouters.PostgresRouter', 'wildLifeSpotterBE.dbrouters.MongoDBRouter']
 
 
 # Password validation

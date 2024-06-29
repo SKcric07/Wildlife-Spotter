@@ -1,11 +1,10 @@
 import datetime
 import jwt
 
-from rest_framework.exceptions import AuthenticationFailed,ValidationError
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from wildLifeSpotterBE.serializers import UserSerializer
 from wildLifeSpotterBE.settings import SECRET_KEY, WLS_JWT_ACCESS_TOKEN_LIFETIME, WLS_JWT_REFRESH_TOKEN_LIFETIME
-from database.models import User
-
+from .models import User, ProfileDetails
 
 def get_user_data(user):
     if not user.is_authenticated:
@@ -16,13 +15,11 @@ def get_user_data(user):
         "email": user.email,
     }
 
-
 def register_user(data):
     serializer = UserSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return serializer.data
-
 
 def authenticate_user(email, password):
     user = User.objects.filter(email=email).first()
@@ -34,7 +31,6 @@ def authenticate_user(email, password):
         raise AuthenticationFailed('Incorrect login details')
 
     return user
-
 
 def generate_tokens(user):
     access_payload = {
@@ -54,7 +50,6 @@ def generate_tokens(user):
 
     return access_token, refresh_token
 
-
 def decode_refresh_token(refresh_token):
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=['HS256'])
@@ -69,21 +64,37 @@ def decode_refresh_token(refresh_token):
 
     return user
 
-
 def update_user(user, data):
     serializer = UserSerializer(user, data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    return serializer.data
 
+    # Update user details in MongoDB
+    details_data = {
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email
+    }
+    ProfileDetails.objects.filter(username=user.email).update(details=details_data)
+
+    return serializer.data
 
 def partial_update_user(user, data):
     serializer = UserSerializer(user, data=data, partial=True)
     serializer.is_valid(raise_exception=True)
     serializer.save()
+
+    # Update user details in MongoDB
+    details_data = {
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email
+    }
+    ProfileDetails.objects.filter(username=user.email).update(details=details_data)
+
     return serializer.data
 
-def change_password(user,data):
+def change_password(user, data):
     old_password = data.get('old_password')
     new_password = data.get('new_password')
 
@@ -96,9 +107,10 @@ def change_password(user,data):
     user.set_password(new_password)
     user.save()
 
-    return({
+    return {
         "message": "Password Changed Successfully"
-    })
+    }
 
 def delete_user(user):
+    ProfileDetails.objects.filter(username=user.email).delete()
     user.delete()
