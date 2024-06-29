@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import AuthenticationFailed
 
+from .imagerecog import predict_image
 from database import views as db_views
 
 @api_view(['GET'])
@@ -14,20 +15,17 @@ def hello_world(request):
     }
     return Response(message)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_data(request):
     user_data = db_views.get_user_data(request.user)
     return JsonResponse(user_data, safe=False)
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
     user_data = db_views.register_user(request.data)
     return Response(user_data)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -50,7 +48,6 @@ def login_user(request):
     }
     return response
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def refresh_access_token(request):
@@ -69,7 +66,6 @@ def refresh_access_token(request):
     }
     return response
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_user(request):
@@ -80,7 +76,6 @@ def logout_user(request):
     }
     return response
 
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_user_data(request):
@@ -88,7 +83,6 @@ def update_user_data(request):
     data = request.data
     updated_user_data = db_views.update_user(user, data)
     return Response(updated_user_data)
-
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -98,13 +92,12 @@ def partial_update_user_data(request):
     updated_user_data = db_views.partial_update_user(user, data)
     return Response(updated_user_data)
 
-
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def change_password(request):
     data = request.data
     user = request.user  
-    return Response(db_views.change_password(user=user,data=data))
+    return Response(db_views.change_password(user=user, data=data))
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -115,5 +108,24 @@ def delete_user(request):
     response.delete_cookie('jwt')
     return response
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def predict_image_view(request):
+    if 'file' not in request.FILES:
+        return JsonResponse({'error': 'No file part'}, status=400)
 
+    file = request.FILES['file']
+    if not file:
+        return JsonResponse({'error': 'No selected file'}, status=400)
 
+    try:
+        predictions = predict_image(file)
+        response = {
+            'predictions': [{
+                'label': label,
+                'probability': probability
+            } for label, probability in predictions]
+        }
+        return JsonResponse(response)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
