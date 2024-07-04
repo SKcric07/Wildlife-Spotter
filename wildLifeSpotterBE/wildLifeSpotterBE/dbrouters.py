@@ -31,6 +31,7 @@ class PostgresRouter:
 class MongoDBRouter:
     mongo_models = {
         'database.profiledetails',
+        'database.rewards'
     }
 
     def db_for_read(self, model, **hints):
