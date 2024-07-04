@@ -3,7 +3,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 from torchvision import models
 import requests
-
+from database.views import add_or_update_sighting
 
 model = models.inception_v3(pretrained=True)
 model.eval()
@@ -11,6 +11,8 @@ model.eval()
 # Load the ImageNet class labels
 with open('labels.txt', 'r') as f:
     labels = [line.strip() for line in f.readlines()]
+
+
 
 def preprocess_image(file):
     image = Image.open(file)
@@ -23,7 +25,7 @@ def preprocess_image(file):
     img_t = preprocess(image)
     return torch.unsqueeze(img_t, 0)
 
-def predict_image(file):
+def predict_image(request,file):
     img_tensor = preprocess_image(file)
     with torch.no_grad():
         out = model(img_tensor)
@@ -35,5 +37,12 @@ def predict_image(file):
             label = labels[top5_idx[i]]
             probability = top5_prob[i].item()
             results.append((label, probability))
-        
-        return results
+
+        message = "Identified"
+
+        if results[0][1] > 60:
+            if(request.user.is_authenticated):
+                add_or_update_sighting(request.user.email, results[0][0])
+        else:
+            message = "UnIdentified"        
+        return results,message
