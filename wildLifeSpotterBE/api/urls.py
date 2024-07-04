@@ -11,6 +11,7 @@ urlpatterns = [
     path('updateuserdata',views.update_user_data, name='updateuserdata'),
     path('partialupdateuser',views.partial_update_user_data,name='partialupdateuser'),
     path('delete-user',views.delete_user,name="deleteUser"),
-    path('predict',views.predict_image_view,name='predictImage')
+    path('predict',views.predict_image_view,name='predictImage'),
+    path('getrewards',views.getRewards, name='getRewards')
 
 ]

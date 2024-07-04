@@ -4,7 +4,7 @@ from djongo import models as mongo_models
 
 class User(AbstractUser):
     name = models.CharField(max_length=255)
-    email = models.EmailField(max_length=254,unique=True)
+    email = models.EmailField(max_length=254, unique=True)
     password = models.CharField(max_length=255)
     username = None
 
@@ -24,11 +24,17 @@ class ProfileDetails(mongo_models.Model):
     details = mongo_models.EmbeddedField(
         model_container=UserDetails
     )
-    
+
     objects = mongo_models.DjongoManager()
 
     def __str__(self):
         return str(self.username)
 
+class Rewards(mongo_models.Model):
+    user = mongo_models.CharField(max_length=255)
+    sightings = mongo_models.JSONField(default=dict)
 
+    objects = mongo_models.DjongoManager()
 
+    def __str__(self):
+        return str(self.user)

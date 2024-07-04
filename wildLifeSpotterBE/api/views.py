@@ -119,8 +119,9 @@ def predict_image_view(request):
         return JsonResponse({'error': 'No selected file'}, status=400)
 
     try:
-        predictions = predict_image(file)
+        predictions,message = predict_image(request,file)
         response = {
+            'message' : message,
             'predictions': [{
                 'label': label,
                 'probability': probability
@@ -129,3 +130,23 @@ def predict_image_view(request):
         return JsonResponse(response)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getRewards(request):
+    reward, total_animals_found = db_views.retrieve_original_document_and_animals_found(request.user.email)
+    
+    if reward:
+        response_data = {
+            'reward': {
+                'user': reward.user,
+                'sightings': reward.sightings
+            },
+            'total_animals_found': total_animals_found
+        }
+    else:
+        response_data = {
+            'error': 'No rewards found for this user.'
+        }
+
+    return Response(response_data)
