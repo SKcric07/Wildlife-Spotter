@@ -1,6 +1,9 @@
 class PostgresRouter:
     postgres_models = {
         'database.user',
+        'database.passwordresettoken',
+        'database.species',
+        'database.notfoundlog'
     }
 
     def db_for_read(self, model, **hints):
