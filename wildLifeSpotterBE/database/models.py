@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from djongo import models as mongo_models
+from django.utils.timezone import now, timedelta
+
 
 class User(AbstractUser):
     name = models.CharField(max_length=255)
@@ -38,3 +40,29 @@ class Rewards(mongo_models.Model):
 
     def __str__(self):
         return str(self.user)
+    
+
+class OTP(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def is_valid(self):
+        return self.expires_at > now()
+    
+class Species(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    details = models.TextField(max_length=500*5)  
+    status = models.CharField(max_length=50)
+
+    def __str__(self):
+        return str(self.name)
+    
+class NotFoundLog(models.Model):
+    name = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.name)    
+ 

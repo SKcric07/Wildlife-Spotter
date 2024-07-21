@@ -2,8 +2,11 @@ import datetime
 from datetime import timedelta
 import jwt
 
+from django.contrib.auth.models import User as authUser
+
 from django.utils import timezone
 from django.db.models import Sum
+from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
@@ -12,6 +15,8 @@ from wildLifeSpotterBE.settings import SECRET_KEY, WLS_JWT_ACCESS_TOKEN_LIFETIME
 from wildLifeSpotterBE.settings import SAME_SPECIES_BUFFER
 from database.models import Rewards
 from .models import User, ProfileDetails
+from .models import OTP
+from .models import Species, NotFoundLog
 
 
 def get_user_data(user):
@@ -58,9 +63,9 @@ def generate_tokens(user):
 
     return access_token, refresh_token
 
-def decode_refresh_token(refresh_token):
+def decode_token(token):
     try:
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=['HS256'])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
         raise AuthenticationFailed('Refresh token expired')
     except jwt.InvalidTokenError:
@@ -161,4 +166,60 @@ def retrieve_original_document_and_animals_found(user_email):
             return None, 0 
     except ObjectDoesNotExist:
         return None, 0 
-    
+
+
+
+def save_otp(user_id, otp, expires_at):
+    OTP.objects.create(user_id=user_id, otp=otp, expires_at=expires_at)
+
+def get_valid_otp(user, otp):
+    try:
+        otp_entry = OTP.objects.filter(user_id=user.id, otp=otp).latest('created_at')
+        if otp_entry.is_valid():
+            payload = {
+                'id': user.id,
+                'email': user.email,
+                'exp': timezone.now() + timedelta(minutes=15),
+                'iat': datetime.datetime.now(datetime.timezone.utc)
+                }
+            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+            return otp_entry,token
+    except OTP.DoesNotExist:
+        return None
+    return None
+
+def get_user_by_email(email):
+    try:
+        return User.objects.get(email=email)
+    except ObjectDoesNotExist:
+        return None
+
+def change_password(user, new_password):
+    try:
+        user.set_password(new_password)
+        user.save()
+        delete_otps_for_user(user)
+        return {"message": "Password changed successfully"}
+    except Exception as e:
+        raise ValidationError(f"Failed to change password: {str(e)}")
+
+def delete_otps_for_user(user):
+    OTP.objects.filter(user=user).delete()
+
+
+def get_species_info(name):
+    try:
+        species = Species.objects.get(Q(name__iexact=name))
+        return {
+            'name': species.name,
+            'details': species.details,
+            'status': species.status
+        }
+    except Species.DoesNotExist:
+        NotFoundLog.objects.create(name=name)
+        
+        return {
+            'name': name,
+            'details': 'Details coming soon',
+            'status': 'Status coming soon'
+        }

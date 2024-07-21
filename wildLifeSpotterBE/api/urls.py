@@ -12,6 +12,10 @@ urlpatterns = [
     path('partialupdateuser',views.partial_update_user_data,name='partialupdateuser'),
     path('delete-user',views.delete_user,name="deleteUser"),
     path('predict',views.predict_image_view,name='predictImage'),
-    path('getrewards',views.getRewards, name='getRewards')
+    path('getrewards',views.getRewards, name='getRewards'),
+    path('randomimage',views.get_random_image,name="getRandomImage"),
+    path('generate-otp',views.request_otp, name='generate-otp'),
+    path('verify-otp', views.verify_otp, name='verify-otp'),
+    path('changepasswordotp', views.change_password_after_otp,name="changePasswordOnOTP")
 
 ]
