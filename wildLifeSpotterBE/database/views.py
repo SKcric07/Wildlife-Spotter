@@ -1,10 +1,18 @@
 import datetime
+from datetime import timedelta
 import jwt
+
+from django.utils import timezone
+from django.db.models import Sum
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from wildLifeSpotterBE.serializers import UserSerializer
 from wildLifeSpotterBE.settings import SECRET_KEY, WLS_JWT_ACCESS_TOKEN_LIFETIME, WLS_JWT_REFRESH_TOKEN_LIFETIME
+from wildLifeSpotterBE.settings import SAME_SPECIES_BUFFER
+from database.models import Rewards
 from .models import User, ProfileDetails
+
 
 def get_user_data(user):
     if not user.is_authenticated:
@@ -84,7 +92,6 @@ def partial_update_user(user, data):
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
-    # Update user details in MongoDB
     details_data = {
         'first_name': user.first_name,
         'last_name': user.last_name,
@@ -114,3 +121,44 @@ def change_password(user, data):
 def delete_user(user):
     ProfileDetails.objects.filter(username=user.email).delete()
     user.delete()
+
+
+def add_or_update_sighting(user_email, animal_name):
+    reward, created = Rewards.objects.get_or_create(user=user_email)
+    current_time = timezone.now()
+    period = current_time - timedelta(hours=SAME_SPECIES_BUFFER)
+
+    if not reward.sightings:
+        reward.sightings = {'total_count': 0, 'animals': {}}
+    
+    animals = reward.sightings.get('animals', {})
+
+    if animal_name in animals:
+        last_updated = animals[animal_name]['last_updated_timestamp']
+        if last_updated < period.isoformat():
+            animals[animal_name]['count'] += 1
+            reward.sightings['total_count'] += 1
+            animals[animal_name]['last_updated_timestamp'] = current_time.isoformat()
+    else:
+        animals[animal_name] = {
+            'count': 1,
+            'last_found_timestamp': current_time.isoformat(),
+            'last_updated_timestamp': current_time.isoformat()  
+        }
+        reward.sightings['total_count'] += 1
+
+    animals[animal_name]['last_found_timestamp'] = current_time.isoformat()
+    reward.sightings['animals'] = animals
+    reward.save()
+
+def retrieve_original_document_and_animals_found(user_email):
+    try:
+        reward = Rewards.objects.filter(user=user_email).first()
+        if reward:
+            number_of_animals = len(reward.sightings['animals'])
+            return reward, number_of_animals
+        else:
+            return None, 0 
+    except ObjectDoesNotExist:
+        return None, 0 
+    
