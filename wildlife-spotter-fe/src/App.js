@@ -6,6 +6,7 @@ import './App.css';
 import logo from './logo.svg';
 import Home from './Pages/HomePage/Home';
 import AnimalDetectionSystem from './Pages/ImageDetectionPage/AnimalDetectionSystem';
+import ForgetPassword from './Pages/ForgetPasswordPage/ForgetPassword'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/home" element={<Home />} />
           <Route path="/animal-detection" element={<AnimalDetectionSystem />} />
+          <Route path="/forgotpassword" element={<ForgetPassword />} />
         </Routes>
       </div>
     </Router>

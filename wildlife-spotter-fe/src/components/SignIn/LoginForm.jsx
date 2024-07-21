@@ -37,7 +37,7 @@ function LoginForm() {
             required
           />
         </InputGroup>
-        <ForgotPassword>Forgot your password?</ForgotPassword>
+        <ForgotPassword to="/forgotpassword">Forgot your password?</ForgotPassword>
         <SubmitButton type="submit">Log in</SubmitButton>
       </form>
       <LoginPrompt>
@@ -47,7 +47,7 @@ function LoginForm() {
   );
 }
 
-const ForgotPassword = styled.a`
+const ForgotPassword = styled(Link)`
   font-family: Fira Sans, sans-serif;
   text-decoration: underline;
   color: #111;
