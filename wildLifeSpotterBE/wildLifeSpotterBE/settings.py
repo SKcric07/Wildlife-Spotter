@@ -40,7 +40,10 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",  
     "django.contrib.sessions.middleware.SessionMiddleware",  
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -144,7 +147,33 @@ AUTH_USER_MODEL = 'database.User'
 
 # CORS settings
 CORS_ORIGIN_ALLOW_ALL = False
+# CORS settings
+CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS").split(",")]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+WLS_JWT_ACCESS_TOKEN_LIFETIME = int(os.getenv('WLS_JWT_ACCESS_TOKEN_LIFETIME'))
+WLS_JWT_REFRESH_TOKEN_LIFETIME = int(os.getenv('WLS_JWT_REFRESH_TOKEN_LIFETIME'))
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS").split(",")]
 
 CORS_ALLOW_HEADERS = [
