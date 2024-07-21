@@ -1,45 +1,53 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-function ForgetPasswordForm() {
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
+function EnterPasswordForm() {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("OTP confirmed", { email, otp });
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match!");
+    } else {
+      setError("");
+      console.log("New Password confirmed", { newPassword });
+      // Proceed with the password change logic
+    }
   };
 
   return (
     <FormWrapper>
       <form onSubmit={handleSubmit}>
         <InputGroup>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="newPassword">New Password</Label>
           <Input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="password"
+            id="newPassword"
+            name="newPassword"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
             required
           />
         </InputGroup>
-
+        
         <InputGroup>
-          <Label htmlFor="otp">OTP</Label>
+          <Label htmlFor="confirmPassword">Confirm New Password</Label>
           <Input
-            type="text"
-            id="text"
-            name="otp"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
         </InputGroup>
 
-        <SubmitButton type="submit">Submit</SubmitButton>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        
+        <SubmitButton type="submit">Change Password</SubmitButton>
       </form>
-      
     </FormWrapper>
   );
 }
@@ -94,4 +102,11 @@ const Input = styled.input`
   padding: 0 10px;
 `;
 
-export default ForgetPasswordForm;
+const ErrorMessage = styled.div`
+  color: red;
+  font-family: Fira Sans, sans-serif;
+  font-size: 14px;
+  margin-bottom: 20px;
+`;
+
+export default EnterPasswordForm;

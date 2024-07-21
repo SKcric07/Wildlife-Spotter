@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import SignUp from './Pages/SignUpPage/SignUp';
 import SignIn from './Pages/SignInPage/SignIn';
 import './App.css';
-import logo from './logo.svg';
 import Home from './Pages/HomePage/Home';
 import AnimalDetectionSystem from './Pages/ImageDetectionPage/AnimalDetectionSystem';
 import ForgetPassword from './Pages/ForgetPasswordPage/ForgetPassword'
+import EnterPassword from './Pages/EnterPasswordPage/EnterPassword';
 
 function App() {
   return (
@@ -19,6 +19,7 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/animal-detection" element={<AnimalDetectionSystem />} />
           <Route path="/forgotpassword" element={<ForgetPassword />} />
+          <Route path="/enterpassword" element={<EnterPassword />} />
         </Routes>
       </div>
     </Router>
