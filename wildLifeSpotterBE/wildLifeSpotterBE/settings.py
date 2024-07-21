@@ -35,18 +35,20 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "djongo"
-
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",  
+    "django.contrib.sessions.middleware.SessionMiddleware",  
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware'
 ]
 
 REST_FRAMEWORK = {
@@ -54,7 +56,6 @@ REST_FRAMEWORK = {
         'api.jwtauthentication.JWTAuthentication',
     ],
 }
-
 
 ROOT_URLCONF = "wildLifeSpotterBE.urls"
 
@@ -144,11 +145,71 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'database.User'
 
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS settings
+CORS_ORIGIN_ALLOW_ALL = False
+# CORS settings
+CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS").split(",")]
 
-WLS_JWT_ACCESS_TOKEN_LIFETIME=int(os.getenv('WLS_JWT_ACCESS_TOKEN_LIFETIME'))
-WLS_JWT_REFRESH_TOKEN_LIFETIME=int(os.getenv('WLS_JWT_REFRESH_TOKEN_LIFETIME'))
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
+WLS_JWT_ACCESS_TOKEN_LIFETIME = int(os.getenv('WLS_JWT_ACCESS_TOKEN_LIFETIME'))
+WLS_JWT_REFRESH_TOKEN_LIFETIME = int(os.getenv('WLS_JWT_REFRESH_TOKEN_LIFETIME'))
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS").split(",")]
 
-SAME_SPECIES_BUFFER=int(os.getenv('SAME_SPECIES_BUFFER'))
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+WLS_JWT_ACCESS_TOKEN_LIFETIME = int(os.getenv('WLS_JWT_ACCESS_TOKEN_LIFETIME'))
+WLS_JWT_REFRESH_TOKEN_LIFETIME = int(os.getenv('WLS_JWT_REFRESH_TOKEN_LIFETIME'))
+
+SAME_SPECIES_BUFFER = int(os.getenv('SAME_SPECIES_BUFFER'))
+
+# settings.py
+GOOGLE_DRIVE_CLIENT_ID = os.getenv('GOOGLE_DRIVE_CLIENT_ID')
+GOOGLE_DRIVE_CLIENT_SECRET = os.getenv('GOOGLE_DRIVE_CLIENT_SECRET')
+
+# settings.py
+EMAIL_BACKEND=os.getenv('WLS_EMAIL_BACKEND')
+EMAIL_HOST =os.getenv('WLS_EMAIL_HOST')
+EMAIL_PORT =int(os.getenv('WLS_EMAIL_PORT'))
+EMAIL_USE_TLS =bool(os.getenv('WLS_EMAIL_USE_TLS'))
+EMAIL_HOST_USER =os.getenv('WLS_EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD =os.getenv('WLS_EMAIL_HOST_PASSWORD') 
+

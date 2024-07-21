@@ -1,11 +1,20 @@
-from django.http import JsonResponse
+import os
+import random
+import string
+from django.core.mail import send_mail
+#from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+from django.http import JsonResponse, HttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import AuthenticationFailed
-
 from .imagerecog import predict_image
 from database import views as db_views
+from .googleutils import get_random_image_file
+from wildLifeSpotterBE.settings import EMAIL_HOST_USER
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -56,7 +65,7 @@ def refresh_access_token(request):
     if not refresh_token:
         raise AuthenticationFailed('Refresh token required')
 
-    user = db_views.decode_refresh_token(refresh_token)
+    user = db_views.decode_token(refresh_token)
     access_token, _ = db_views.generate_tokens(user)
 
     response = Response()
@@ -119,18 +128,12 @@ def predict_image_view(request):
         return JsonResponse({'error': 'No selected file'}, status=400)
 
     try:
-        predictions,message = predict_image(request,file)
-        response = {
-            'message' : message,
-            'predictions': [{
-                'label': label,
-                'probability': probability
-            } for label, probability in predictions]
-        }
-        return JsonResponse(response)
+        result = predict_image(request, file)
+
+        return JsonResponse(result)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def getRewards(request):
@@ -149,4 +152,96 @@ def getRewards(request):
             'error': 'No rewards found for this user.'
         }
 
-    return Response(response_data)
+    return Response(response_data)    
+
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_random_image(request):
+    """Get a random image file from Google Drive."""
+    try:
+        image_data, file_name = get_random_image_file()
+
+        # Return the random image
+        response = HttpResponse(image_data, content_type='image/jpeg')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+        return response
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+def generate_otp():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+def send_otp_email(email, otp):
+    subject = 'Your OTP Code'
+    message = f'Your OTP code is {otp}. It is valid for the next 10 minutes.'
+    send_mail(subject, message, EMAIL_HOST_USER, [email])
+
+@api_view(['POST'])
+def request_otp(request):
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({'detail': 'Email is required'}, status=400)
+    
+    user = db_views.get_user_by_email(email)  # Adjust according to your implementation
+    if not user:
+        return Response({'detail': 'User not found'}, status=404)
+    
+    otp = generate_otp()
+    expiration_time = timezone.now() + timedelta(minutes=10)
+    
+    # Save OTP to database
+    db_views.save_otp(user.id, otp, expiration_time)  # Adjust according to your implementation
+    
+    # Send OTP email
+    send_otp_email(email, otp)
+    
+    return Response({'detail': 'OTP sent to your email'}, status=200)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+    
+    if not email or not otp:
+        return Response({'detail': 'Email and OTP are required'}, status=400)
+    
+    user = db_views.get_user_by_email(email)
+    if not user:
+        return Response({'detail': 'User not found'}, status=404)
+    
+    valid_otp,token = db_views.get_valid_otp(user, otp)
+    if not valid_otp:
+        return Response({'detail': 'Invalid or expired OTP'}, status=400)
+    response = Response({'detail': 'OTP verified successfully'})
+    response.set_cookie('otp_token', token, httponly=True, secure=True, samesite='Strict')
+    return response
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def change_password_after_otp(request):
+    token = request.COOKIES.get('otp_token')
+    
+    if not token:
+        return Response({'detail': 'OTP verification required'}, status=403)
+    
+    payload = db_views.decode_token(token)
+    if not payload:
+        return Response({'detail': 'Invalid or expired OTP token'}, status=403)
+    
+    user = db_views.get_user_by_email(payload.email)
+    
+    new_password = request.data.get('new_password')
+    if not new_password:
+        return Response({'detail': 'New password is required'}, status=400)
+    
+    db_views.change_password(user,new_password)
+
+    response = Response({'detail': 'Password changed successfully'})
+    response.delete_cookie('otp_token')
+
+    return response
