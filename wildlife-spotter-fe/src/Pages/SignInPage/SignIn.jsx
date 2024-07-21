@@ -12,7 +12,7 @@ function SignIn() {
         <Card>
           <LoginCard />
           <ImageSection>
-            <WildlifeImage loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/cce93baded15cf78beafdae5e82e359b245c19b27d59da6ad1ee73fc4f71def7?apiKey=e3765372b84f44f7af794f9207eac8b0&" alt="Wildlife" />
+            <WildlifeImage loading="lazy" src={`${process.env.PUBLIC_URL}/images/Bird.png`} alt="Wildlife" />
           </ImageSection>
         </Card>
       </MainContent>

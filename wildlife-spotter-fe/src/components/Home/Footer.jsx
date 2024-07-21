@@ -130,7 +130,7 @@ function Footer() {
     <FooterWrapper>
       <TopSection>
         <LogoSection>
-          <FooterLogo src="https://cdn.builder.io/api/v1/image/assets/TEMP/3081e5d4665a35042b32fd184de2b91032edb2cf951d63b25841e174c8037632?apiKey=e3765372b84f44f7af794f9207eac8b0&" alt="Company Logo" loading="lazy" />
+          <FooterLogo src={`${process.env.PUBLIC_URL}/images/footerlogo.png`} alt="Company Logo" loading="lazy" />
           <LogoDescription>
           Join the Wildlife Spotter community to explore, identify, and learn about local wildlife. Your participation supports wildlife conservation and awareness efforts.
           </LogoDescription>

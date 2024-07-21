@@ -16,7 +16,7 @@ const LogoImage = styled.img`
 function Logo() {
   return (
     <Link to="/home">
-      <LogoImage src="https://cdn.builder.io/api/v1/image/assets/TEMP/5e9d3b3d09c8c9163485b53d08a23f61c1f95603937c745e268084ff02bd34b2?apiKey=e3765372b84f44f7af794f9207eac8b0&" alt="Wildlife Spotter Logo" loading="lazy" />
+      <LogoImage src={`${process.env.PUBLIC_URL}/images/headerlogo.png`} alt="Wildlife Spotter Logo" loading="lazy" />
     </Link>
   );
 }
