@@ -1,7 +1,45 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import styled from "styled-components";
 
-function HowItWorks() {
+function HowItWork({ onImageUpload }) {
+  const fileInputRef = useRef(null);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+      // Pass the file to the parent component
+      onImageUpload(file);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+      // Pass the file to the parent component
+      onImageUpload(file);
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <Section>
       <ContentWrapper>
@@ -9,24 +47,43 @@ function HowItWorks() {
           <Subtitle>how it works</Subtitle>
           <Title>Animal Detection System</Title>
           <Description>
-            1. Capture: Take a clear photo of the wildlife you spot in your surroundings.
+            1. Capture: Take a clear photo of the wildlife you spot in your
+            surroundings.
           </Description>
           <Description>
-            2. Upload: Easily upload your photo using our user-friendly interface.
+            2. Upload: Easily upload your photo using our user-friendly
+            interface.
           </Description>
           <Description>
-            3. Identify: Our system will help you identify the animal and provide detailed information.
+            3. Identify: Our system will help you identify the animal and
+            provide detailed information.
           </Description>
           <Description>
-            4. Share: Share your findings with the community and contribute to wildlife conservation.
+            4. Share: Share your findings with the community and contribute to
+            wildlife conservation.
           </Description>
-          <UploadButton>Upload</UploadButton>
+          <UploadButton onClick={handleButtonClick}>Upload</UploadButton>
+          <HiddenFileInput
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileChange}
+          />
         </TextContent>
       </ContentWrapper>
       <ImageUploadWrapper>
-        <ImageUploadArea>
-          <PlusIcon>+</PlusIcon>
-          <UploadText>Add your image</UploadText>
+        <ImageUploadArea
+          onClick={handleButtonClick}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          {previewImage ? (
+            <PreviewImage src={previewImage} alt="Preview" />
+          ) : (
+            <>
+              <PlusIcon>+</PlusIcon>
+              <UploadText>Add your image</UploadText>
+            </>
+          )}
         </ImageUploadArea>
       </ImageUploadWrapper>
     </Section>
@@ -147,6 +204,7 @@ const ImageUploadArea = styled.div`
   padding: 80px 60px;
   border: 1px dashed #817575;
   height: 100%; /* Make it take up the remaining height */
+  cursor: pointer;
 
   @media (max-width: 991px) {
     margin-top: 30px;
@@ -171,4 +229,15 @@ const UploadText = styled.p`
   font: 16px Manrope, sans-serif;
 `;
 
-export default HowItWorks;
+const HiddenFileInput = styled.input`
+  display: none;
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+`;
+
+export default HowItWork;

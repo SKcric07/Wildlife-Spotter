@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
-
+import React, { useContext } from "react";
+import styled from "styled-components";
+import { Link } from "react-router-dom";
+import { AuthContext } from "../../AuthContext";
 const Nav = styled.nav`
   display: flex;
   gap: 20px;
@@ -23,7 +23,7 @@ const NavItem = styled(Link)`
   overflow: hidden;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     width: 0;
     height: 2px;
@@ -40,11 +40,13 @@ const NavItem = styled(Link)`
 `;
 
 function Navigation() {
+  const { user } = useContext(AuthContext);
+
   return (
     <Nav>
       <NavItem to="/home">Home</NavItem>
       <NavItem to="/animal-detection">Image Identification</NavItem>
-      <NavItem to="/reward">Reward</NavItem>
+      {user && <NavItem to="/reward">Reward</NavItem>}
     </Nav>
   );
 }

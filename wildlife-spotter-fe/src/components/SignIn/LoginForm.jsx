@@ -1,14 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import styled from "styled-components";
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { LOGIN_API_URL } from "../../api/urlsconfig";
+import { AuthContext } from "../../AuthContext";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const { login } = useContext(AuthContext);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login submitted", { email, password });
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await axios.post(LOGIN_API_URL, { email, password });
+      const { message, user, access_token } = response.data;
+      Cookies.set("access_token", access_token, { expires: 1 / 6 });
+
+      setSuccess(message);
+      login(user);
+    } catch (err) {
+      setError("Login failed. Please check your credentials.");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,16 +61,25 @@ function LoginForm() {
             required
           />
         </InputGroup>
-        <ForgotPassword to="/forgotpassword">Forgot your password?</ForgotPassword>
-        <SubmitButton type="submit">Log in</SubmitButton>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {success && <SuccessMessage>{success}</SuccessMessage>}
+
+        <ForgotPassword to="/forgotpassword">
+          Forgot your password?
+        </ForgotPassword>
+        <SubmitButton type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Log in"}
+        </SubmitButton>
       </form>
       <LoginPrompt>
-        Don't have an account? <LoginLink to="/signup">Sign Up</LoginLink> 
+        Don't have an account? <LoginLink to="/signup">Sign Up</LoginLink>
       </LoginPrompt>
     </FormWrapper>
   );
 }
 
+// Styled components
 const ForgotPassword = styled(Link)`
   font-family: Fira Sans, sans-serif;
   text-decoration: underline;
@@ -75,14 +108,18 @@ const SubmitButton = styled.button`
   @media (max-width: 991px) {
     padding: 12px 24px;
   }
+  &:disabled {
+    background-color: #888;
+    cursor: not-allowed;
+  }
 `;
 
 const FormWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center the form content vertically */
+  justify-content: center;
   width: 100%;
-  max-width: 400px; /* Set a max width for the form */
+  max-width: 400px;
 `;
 
 const InputGroup = styled.div`
@@ -105,12 +142,24 @@ const Input = styled.input`
   height: 36px;
   padding: 0 10px;
 `;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 14px;
+  margin: 10px 0;
+`;
+
+const SuccessMessage = styled.p`
+  color: green;
+  font-size: 14px;
+  margin: 10px 0;
+`;
+
 const LoginPrompt = styled.p`
   color: #111;
   font: 400 14px Poppins, sans-serif;
   margin-top: 12px;
 `;
-
 
 const LoginLink = styled(Link)`
   text-decoration: underline;

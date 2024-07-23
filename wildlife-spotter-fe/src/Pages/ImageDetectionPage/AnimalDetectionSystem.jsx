@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useContext } from "react";
 import styled from "styled-components";
+import axios from "axios";
+import { AuthContext } from "../../AuthContext";
 
 import Hero from "../../components/ImageDetection/Hero";
 import Header from "../../components/Home/Header";
@@ -8,13 +10,62 @@ import HowItWork from "../../components/ImageDetection/HowItWork";
 import ResultDisplay from "../../components/ImageDetection/ResultDisplay";
 
 function AnimalDetectionSystem() {
+  const [result, setResult] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const { user } = useContext(AuthContext); // Get user from AuthContext
+
+  const handleFileUpload = async (file) => {
+    setUploadedImage(URL.createObjectURL(file)); // Save the image URL
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/predict",
+        formData,
+        {
+          params: {
+            email: user?.email, // Include user's email as a query parameter
+          },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const data = response.data;
+        setResult({
+          name: data.name,
+          details: data.details,
+          image: URL.createObjectURL(file), // Use the uploaded file
+          status: data.status,
+        });
+      } else {
+        console.error("Error:", response.data);
+        // Handle error as needed
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      // Handle error as needed
+    }
+  };
+
   return (
     <StyledContainer>
       <Header />
       <Hero />
-      <HowItWork />
+      <HowItWork onImageUpload={handleFileUpload} />
       <Divider />
-      <ResultDisplay />
+      {result && (
+        <ResultDisplay
+          name={result.name}
+          details={result.details}
+          image={result.image}
+          status={result.status}
+        />
+      )}
       <Footer />
     </StyledContainer>
   );

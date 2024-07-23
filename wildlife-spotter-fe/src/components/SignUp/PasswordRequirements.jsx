@@ -1,26 +1,26 @@
 import React from "react";
 import styled from "styled-components";
 
-const requirements = [
-  "Use 8 or more characters",
-  "One special character",
-  "One Uppercase character",
-  "One number",
-  "One lowercase character"
-];
+const PasswordRequirements = ({ requirementsMet = [] }) => {
+  const requirements = [
+    "Use 8 or more characters",
+    "One special character",
+    "One Uppercase character",
+    "One number",
+    "One lowercase character",
+  ];
 
-function PasswordRequirements() {
   return (
     <RequirementsList>
       {requirements.map((req, index) => (
-        <RequirementItem key={index}>
+        <RequirementItem key={index} $met={requirementsMet[index]}>
           <Bullet />
-          <RequirementText>{req}</RequirementText>
+          <RequirementText $met={requirementsMet[index]}>{req}</RequirementText>
         </RequirementItem>
       ))}
     </RequirementsList>
   );
-}
+};
 
 const RequirementsList = styled.ul`
   display: flex;
@@ -38,17 +38,20 @@ const RequirementItem = styled.li`
   align-items: center;
   gap: 8px;
   padding: 4px 0;
+  color: ${(props) => (props.$met ? "green" : "rgba(102, 102, 102, 0.6)")};
 `;
 
 const Bullet = styled.span`
-  background-color: rgba(102, 102, 102, 0.6);
+  background-color: currentColor; /* Bullet inherits the text color */
   border-radius: 50%;
   width: 8px;
   height: 8px;
+  display: inline-block;
 `;
 
 const RequirementText = styled.span`
   font-family: Fira Sans, sans-serif;
+  color: ${(props) => (props.$met ? "green" : "rgba(102, 102, 102, 0.6)")};
 `;
 
 export default PasswordRequirements;

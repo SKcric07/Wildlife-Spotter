@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from database.models import User, ProfileDetails, UserDetails
+from datetime import datetime
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,12 +17,16 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
 
+        year = datetime.now().year
+
         # Save user details in MongoDB
         details_data = {
             'first_name': instance.first_name,
             'last_name': instance.last_name,
-            'email': instance.email
-        }
+            'email': instance.email,
+            'year': year,  
+            }
+
         ProfileDetails.objects.create(username=instance.email, details=details_data)
 
         return instance

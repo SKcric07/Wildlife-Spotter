@@ -1,18 +1,52 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../../components/SignUp/Header";
 import LoginCard from "../../components/SignIn/LoginCard";
+import axios from "axios";
 
 function SignIn() {
-  return (
+  const [wildlifeImage, setWildlifeImage] = useState("");
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchRandomImage = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/randomimage",
+          {
+            responseType: "blob",
+          }
+        );
+        const imageUrl = URL.createObjectURL(response.data);
+        setWildlifeImage(imageUrl);
+      } catch (error) {
+        console.error("Error fetching random image:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRandomImage();
+  }, []);
+
+  if (loading) {
+    return <LoadingWrapper>Loading...</LoadingWrapper>;
+  }
+
+  return (
     <AppWrapper>
       <Header />
       <MainContent>
         <Card>
           <LoginCard />
           <ImageSection>
-            <WildlifeImage loading="lazy" src={`${process.env.PUBLIC_URL}/images/Bird.png`} alt="Wildlife" />
+            {wildlifeImage && (
+              <WildlifeImage
+                loading="lazy"
+                src={wildlifeImage}
+                alt="Wildlife"
+              />
+            )}
           </ImageSection>
         </Card>
       </MainContent>
@@ -33,6 +67,9 @@ const MainContent = styled.main`
   align-items: center;
   flex-grow: 1;
   padding: 20px;
+  height: calc(
+    100vh - 80px
+  ); /* Adjust this based on Header height if necessary */
 `;
 
 const Card = styled.div`
@@ -43,6 +80,7 @@ const Card = styled.div`
   overflow: hidden;
   max-width: 1000px;
   width: 100%;
+  height: 500px; /* Adjust height as needed */
 `;
 
 const ImageSection = styled.aside`
@@ -56,6 +94,15 @@ const WildlifeImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+`;
+
+const LoadingWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 24px;
+  font-family: Arial, sans-serif;
 `;
 
 export default SignIn;

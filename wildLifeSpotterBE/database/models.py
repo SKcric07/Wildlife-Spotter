@@ -1,8 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from djongo import models as mongo_models
-from django.utils.timezone import now, timedelta
-
+from django.utils.timezone import now
 
 class User(AbstractUser):
     name = models.CharField(max_length=255)
@@ -17,6 +16,7 @@ class UserDetails(mongo_models.Model):
     first_name = mongo_models.CharField(max_length=255)
     last_name = mongo_models.CharField(max_length=255)
     email = mongo_models.EmailField(max_length=254)
+    year = mongo_models.PositiveIntegerField() 
 
     class Meta:
         abstract = True
@@ -65,4 +65,12 @@ class NotFoundLog(models.Model):
 
     def __str__(self):
         return str(self.name)    
- 
+    
+class LocalSpecies(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    details = models.TextField()
+    image_link = models.URLField(max_length=2000)
+    type = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
