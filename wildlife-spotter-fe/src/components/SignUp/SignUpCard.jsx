@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import SignUpForm from "./SignUpForm";
-import PasswordRequirements from "./PasswordRequirements";
 import MarketingConsent from "./MarketingConsent";
 import TermsAndPrivacy from "./TermsAndPrivacy";
 import CreateAccountButton from "./CreateAccountButton";
@@ -11,7 +10,6 @@ function SignUpCard() {
     <CardContent>
       <Title>Welcome to Wildlife Community</Title>
       <SignUpForm />
-      <PasswordRequirements />
       <MarketingConsent />
       <TermsAndPrivacy />
       <CreateAccountButton />
@@ -32,6 +30,5 @@ const Title = styled.h2`
   font: 600 28px Fira Sans, sans-serif;
   margin-bottom: 34px;
 `;
-
 
 export default SignUpCard;

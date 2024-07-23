@@ -1,13 +1,12 @@
 import React from "react";
 import styled from "styled-components";
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 
 function CreateAccountButton() {
   return (
     <ButtonWrapper>
-      <CreateButton>Create an account</CreateButton>
       <LoginPrompt>
-        Already have an account? <LoginLink to="/signin">Log in</LoginLink> 
+        Already have an account? <LoginLink to="/signin">Log in</LoginLink>
       </LoginPrompt>
     </ButtonWrapper>
   );

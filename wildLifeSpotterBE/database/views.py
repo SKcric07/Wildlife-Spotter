@@ -5,7 +5,7 @@ import jwt
 from django.contrib.auth.models import User as authUser
 
 from django.utils import timezone
-from django.db.models import Sum
+from django.db import connection
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -15,7 +15,7 @@ from wildLifeSpotterBE.settings import SECRET_KEY, WLS_JWT_ACCESS_TOKEN_LIFETIME
 from wildLifeSpotterBE.settings import SAME_SPECIES_BUFFER
 from database.models import Rewards
 from .models import User, ProfileDetails
-from .models import OTP
+from .models import OTP, LocalSpecies
 from .models import Species, NotFoundLog
 
 
@@ -159,13 +159,19 @@ def add_or_update_sighting(user_email, animal_name):
 def retrieve_original_document_and_animals_found(user_email):
     try:
         reward = Rewards.objects.filter(user=user_email).first()
+
+        profile_details = ProfileDetails.objects.filter(username=user_email).first()
+        year = profile_details.details.year if profile_details and profile_details.details else 2024
+
+
         if reward:
             number_of_animals = len(reward.sightings['animals'])
-            return reward, number_of_animals
+            return reward, number_of_animals, year
         else:
-            return None, 0 
+            return None, 0, year
     except ObjectDoesNotExist:
-        return None, 0 
+        return None, 0, 2024
+
 
 
 
@@ -175,18 +181,21 @@ def save_otp(user_id, otp, expires_at):
 def get_valid_otp(user, otp):
     try:
         otp_entry = OTP.objects.filter(user_id=user.id, otp=otp).latest('created_at')
-        if otp_entry.is_valid():
-            payload = {
-                'id': user.id,
-                'email': user.email,
-                'exp': timezone.now() + timedelta(minutes=15),
-                'iat': datetime.datetime.now(datetime.timezone.utc)
-                }
-            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-            return otp_entry,token
     except OTP.DoesNotExist:
-        return None
-    return None
+        return None, None
+
+    if otp_entry.is_valid():
+        payload = {
+            'id': user.id,
+            'email': user.email,
+            'exp': timezone.now() + timedelta(minutes=15),
+            'iat': datetime.datetime.now(datetime.timezone.utc)
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+        return otp_entry, token
+    
+    return None, None
+
 
 def get_user_by_email(email):
     try:
@@ -223,3 +232,27 @@ def get_species_info(name):
             'details': 'Details coming soon',
             'status': 'Status coming soon'
         }
+    
+
+
+def get_random_local_species_records(count):
+    with connection.cursor() as cursor:
+        query = """
+        SELECT id, name, details, image_link
+        FROM database_localspecies
+        ORDER BY RANDOM()
+        LIMIT %s
+        """
+        cursor.execute(query, [count])
+        rows = cursor.fetchall()
+
+    # Convert rows to a list of dictionaries
+    result = [
+        {
+            'name': row[1],
+            'details': row[2],
+            'image_url': row[3]
+        }
+        for row in rows
+    ]
+    return result     

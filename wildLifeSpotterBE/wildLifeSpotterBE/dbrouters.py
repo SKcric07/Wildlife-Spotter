@@ -3,7 +3,8 @@ class PostgresRouter:
         'database.user',
         'database.passwordresettoken',
         'database.species',
-        'database.notfoundlog'
+        'database.notfoundlog',
+        'database.localspecies'
     }
 
     def db_for_read(self, model, **hints):

@@ -1,6 +1,8 @@
 import os
 import random
 import string
+import traceback
+
 from django.core.mail import send_mail
 #from django.conf import settings
 from django.utils import timezone
@@ -39,6 +41,7 @@ def register_user(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
+
     email = request.data.get('email')
     password = request.data.get('password')
 
@@ -50,30 +53,52 @@ def login_user(request):
 
     response = Response()
     response.set_cookie(key='jwt', value=access_token, httponly=True, secure=True, samesite='Strict')
+    response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, secure=True, samesite='Strict')
     response.data = {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "message": "Success"
+        "message": "Success",
+        "user": db_views.get_user_data(user),
+        "access_token": access_token
     }
+
     return response
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def refresh_access_token(request):
-    refresh_token = request.data.get('refresh_token')
+    refresh_token = request.COOKIES.get('refresh_token')
 
     if not refresh_token:
         raise AuthenticationFailed('Refresh token required')
 
-    user = db_views.decode_token(refresh_token)
-    access_token, _ = db_views.generate_tokens(user)
+    try:
+        user = db_views.decode_token(refresh_token)  
+        access_token, new_refresh_token = db_views.generate_tokens(user)  
 
-    response = Response()
-    response.set_cookie(key='jwt', value=access_token, httponly=True, secure=True, samesite='Strict')
-    response.data = {
-        "access_token": access_token
-    }
-    return response
+        response = Response()
+        
+        response.set_cookie(
+            key='jwt', 
+            value=access_token, 
+            httponly=True, 
+            secure=True, 
+            samesite='Strict'
+        )
+
+        response.set_cookie(
+            key='refresh_token', 
+            value=new_refresh_token, 
+            httponly=True, 
+            secure=True, 
+            samesite='Strict'
+        )
+        
+        response.data = {
+            "message": "Success"
+        }
+        return response
+    
+    except Exception as e:
+        raise AuthenticationFailed(f'Error refreshing token: {str(e)}')
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -132,12 +157,13 @@ def predict_image_view(request):
 
         return JsonResponse(result)
     except Exception as e:
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def getRewards(request):
-    reward, total_animals_found = db_views.retrieve_original_document_and_animals_found(request.user.email)
+    reward, total_animals_found, year = db_views.retrieve_original_document_and_animals_found(request.query_params.get('email'))
     
     if reward:
         response_data = {
@@ -145,7 +171,8 @@ def getRewards(request):
                 'user': reward.user,
                 'sightings': reward.sightings
             },
-            'total_animals_found': total_animals_found
+            'total_animals_found': total_animals_found,
+            'year': int(year)
         }
     else:
         response_data = {
@@ -204,6 +231,7 @@ def request_otp(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_otp(request):
+    print("here")
     email = request.data.get('email')
     otp = request.data.get('otp')
     
@@ -214,17 +242,18 @@ def verify_otp(request):
     if not user:
         return Response({'detail': 'User not found'}, status=404)
     
-    valid_otp,token = db_views.get_valid_otp(user, otp)
-    if not valid_otp:
+    valid_otp, token = db_views.get_valid_otp(user, otp)
+    if valid_otp is None:
         return Response({'detail': 'Invalid or expired OTP'}, status=400)
-    response = Response({'detail': 'OTP verified successfully'})
-    response.set_cookie('otp_token', token, httponly=True, secure=True, samesite='Strict')
+    
+    response = Response({'detail': 'OTP verified successfully','otp_token': token})
+    response.set_cookie('otp_token', token, httponly=True, secure=False, samesite='lax')
     return response
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def change_password_after_otp(request):
-    token = request.COOKIES.get('otp_token')
+    token = request.data.get('otp_token')
     
     if not token:
         return Response({'detail': 'OTP verification required'}, status=403)
@@ -245,3 +274,13 @@ def change_password_after_otp(request):
     response.delete_cookie('otp_token')
 
     return response
+
+
+@api_view(['GET','POST'])
+@permission_classes([AllowAny])
+def get_random_local_species(request):
+    print(request.data.get('count'))
+    print(request.data)
+    count = int(request.data.get('count'))
+    species_records = db_views.get_random_local_species_records(count)
+    return JsonResponse(species_records, safe=False)

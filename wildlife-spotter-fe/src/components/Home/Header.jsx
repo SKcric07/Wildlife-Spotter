@@ -1,8 +1,10 @@
-import React from 'react';
-import styled from 'styled-components';
-import Logo from './Logo';
-import Navigation from './Navigation';
-import AuthButtons from './AuthButtons';
+import React, { useContext } from "react";
+import styled from "styled-components";
+import Logo from "./Logo";
+import Navigation from "./Navigation";
+import AuthButtons from "./AuthButtons";
+import AuthButtons2 from "./AuthButtons2";
+import { AuthContext } from "../../AuthContext"; // Adjust the path as necessary
 
 const HeaderWrapper = styled.header`
   display: flex;
@@ -16,11 +18,13 @@ const HeaderWrapper = styled.header`
 `;
 
 function Header() {
+  const { user } = useContext(AuthContext);
+
   return (
     <HeaderWrapper>
       <Logo />
       <Navigation />
-      <AuthButtons />
+      {user ? <AuthButtons2 /> : <AuthButtons />}
     </HeaderWrapper>
   );
 }

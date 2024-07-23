@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import axios from "axios";
 
 const SectionTitle = styled.h2`
   color: #000;
@@ -16,7 +17,7 @@ const SectionTitle = styled.h2`
   }
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     width: 0;
     height: 2px;
@@ -79,7 +80,7 @@ const CardTitle = styled.h3`
   display: inline-block;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     width: 0;
     height: 2px;
@@ -101,63 +102,31 @@ const CardDescription = styled.p`
 `;
 
 function ExploreSection() {
+  const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const cardWidth = 290; // Adjust this value based on card width + margin
-  const totalCards = 8; // Number of unique cards
   const cardGridRef = useRef(null);
 
-  const cards = [
-    {
-      id: 1,
-      title: "Bird Watching: Wildlife",
-      description: "Explore the diverse bird species in their natural habitats. Witness their behavior and listen to their melodious songs.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 2,
-      title: "Butterfly Gardens",
-      description: "Discover the colorful world of butterflies in our specially designed gardens. Learn about their life cycles and importance in ecosystems.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 3,
-      title: "Wildflower Meadows",
-      description: "Wander through vibrant wildflower meadows. Identify various species and understand their role in supporting local wildlife.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 4,
-      title: "Forest Trails",
-      description: "Explore dense forest trails and encounter diverse flora and fauna. Learn about forest ecosystems and conservation efforts.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 5,
-      title: "Mountain Hikes",
-      description: "Challenge yourself with mountain hikes. Enjoy breathtaking views and learn about mountain ecosystems.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 6,
-      title: "River Adventures",
-      description: "Experience the thrill of river adventures. Observe aquatic wildlife and understand river ecosystems.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 7,
-      title: "Desert Discoveries",
-      description: "Explore the unique flora and fauna of desert landscapes. Learn about survival strategies in harsh environments.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    },
-    {
-      id: 8,
-      title: "Wetland Wonders",
-      description: "Discover the rich biodiversity of wetlands. Understand their importance in supporting diverse ecosystems.",
-      image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/6afda67fd44640083cd04203b8b7a49e2114ca96fdeacf3468259f46772559ad?apiKey=e3765372b84f44f7af794f9207eac8b0&'
-    }
-  ];
+  useEffect(() => {
+    // Fetch data from API
+    const fetchData = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/getlocalspecies",
+          {
+            count: 8,
+          }
+        );
+        setCards(response.data);
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (isPaused) return;
@@ -171,17 +140,19 @@ function ExploreSection() {
   }, [isPaused]);
 
   useEffect(() => {
-    if (currentIndex === totalCards) {
+    if (currentIndex === cards.length) {
       setTimeout(() => {
         setIsTransitioning(false);
         setCurrentIndex(0);
       }, 500); // Match this value to the transition duration
     }
-  }, [currentIndex, totalCards]);
+  }, [currentIndex, cards.length]);
 
   useEffect(() => {
     const cardGrid = cardGridRef.current;
-    cardGrid.style.transition = isTransitioning ? 'transform 0.5s ease' : 'none';
+    cardGrid.style.transition = isTransitioning
+      ? "transform 0.5s ease"
+      : "none";
     cardGrid.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
   }, [currentIndex, isTransitioning, cardWidth]);
 
@@ -199,20 +170,28 @@ function ExploreSection() {
       <CarouselContainer>
         <CardGrid ref={cardGridRef}>
           {cards.map((card, index) => (
-            <Card key={index} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-              <CardImage src={card.image} alt={card.title} loading="lazy" />
+            <Card
+              key={index}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <CardImage src={card.image_url} alt={card.name} loading="lazy" />
               <CardContent>
-                <CardTitle>{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+                <CardTitle>{card.name}</CardTitle>
+                <CardDescription>{card.details}</CardDescription>
               </CardContent>
             </Card>
           ))}
           {cards.map((card, index) => (
-            <Card key={index + cards.length} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-              <CardImage src={card.image} alt={card.title} loading="lazy" />
+            <Card
+              key={index + cards.length}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <CardImage src={card.image_url} alt={card.name} loading="lazy" />
               <CardContent>
-                <CardTitle>{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+                <CardTitle>{card.name}</CardTitle>
+                <CardDescription>{card.details}</CardDescription>
               </CardContent>
             </Card>
           ))}

@@ -16,6 +16,7 @@ urlpatterns = [
     path('randomimage',views.get_random_image,name="getRandomImage"),
     path('generate-otp',views.request_otp, name='generate-otp'),
     path('verify-otp', views.verify_otp, name='verify-otp'),
-    path('changepasswordotp', views.change_password_after_otp,name="changePasswordOnOTP")
+    path('changepasswordotp', views.change_password_after_otp,name="changePasswordOnOTP"),
+    path('getlocalspecies',views.get_random_local_species,name="randomLocalSpecies")
 
 ]
